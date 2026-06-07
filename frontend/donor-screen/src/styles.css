@@ -1,0 +1,166 @@
+/* Calm, simple, dependency-light styling for the donor screen (Task 14.3).
+   Goals: readable contrast, large tap targets, no medical alarm. */
+
+:root {
+  --bg: #f4f7fb;
+  --card: #ffffff;
+  --ink: #1f2933;
+  --ink-soft: #52606d;
+  --line: #e4e9f0;
+  --accept: #1f7a4d;
+  --accept-ink: #ffffff;
+  --decline: #ffffff;
+  --decline-ink: #3e4c59;
+  --decline-line: #cbd2d9;
+  --brand: #b22234;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans",
+    Arial, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.card {
+  width: 100%;
+  max-width: 480px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 28px 24px 32px;
+  box-shadow: 0 6px 24px rgba(31, 41, 51, 0.06);
+}
+
+.brand {
+  margin: 0 0 16px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--brand);
+  font-size: 0.95rem;
+  text-transform: none;
+}
+
+.heading {
+  margin: 0 0 20px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.details {
+  margin: 0 0 20px;
+  padding: 0;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+}
+
+.detail-row:last-child {
+  border-bottom: 1px solid var(--line);
+}
+
+.detail-row dt {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+.detail-row dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+
+.empathetic {
+  margin: 0 0 28px;
+  color: var(--ink-soft);
+  font-size: 1.02rem;
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn {
+  appearance: none;
+  width: 100%;
+  min-height: 56px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.04s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.btn-accept {
+  background: var(--accept);
+  color: var(--accept-ink);
+  border: 1px solid var(--accept);
+}
+
+.btn-decline {
+  background: var(--decline);
+  color: var(--decline-ink);
+  border: 1px solid var(--decline-line);
+}
+
+.status {
+  text-align: center;
+  padding: 12px 0 4px;
+}
+
+.status-title {
+  margin: 0 0 12px;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.status-body {
+  margin: 0 0 20px;
+  color: var(--ink-soft);
+  font-size: 1.05rem;
+}

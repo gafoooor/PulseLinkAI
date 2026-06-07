@@ -1,0 +1,30 @@
+# Local infrastructure for the PulseLink demo.
+# Provides a local PostgreSQL with PostGIS, standing in for the budget
+# production profile's RDS db.t3.micro (PostgreSQL + PostGIS).
+#
+# Usage:
+#   docker compose -f infra/docker-compose.yml up -d
+#
+# PostGIS drives proximity ranking in donor matching.
+
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: pulselink-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pulselink
+      POSTGRES_PASSWORD: pulselink
+      POSTGRES_DB: pulselink
+    ports:
+      - "5432:5432"
+    volumes:
+      - pulselink_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pulselink -d pulselink"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pulselink_pgdata:

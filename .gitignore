@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.hypothesis/
+
+# Env files — never commit real credentials
+.env
+.env.local
+.env.*.local
+.env.production
+# Allow the example template (must contain only placeholder values, not real keys)
+!.env.example
+
+# Deployment config — contains live Twilio keys, ECR URIs, AWS IDs
+deploy/config.ps1
+# Allow the template
+!deploy/config.example.ps1
+
+# Frontend production env files (contain live CloudFront backend URL)
+frontend/**/.env.production
+frontend/**/.env.local
+frontend/**/.env.*.local
+
+# Node / React
+node_modules/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# AWS CLI temp output files
+*.json.tmp
+
+# IDE
+.vscode/settings.json
+.idea/

@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pulselink"
+version = "0.1.0"
+description = "PulseLink — the blood subscription for Thalassemia care (FastAPI backend)"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "pydantic>=2.6",
+    "SQLAlchemy>=2.0",
+    "alembic>=1.13",
+    "psycopg[binary]>=3.1",
+    "GeoAlchemy2>=0.14",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "hypothesis>=6.98",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pulselink*"]
+
+# Single property-test toolchain: pytest as the runner, hypothesis as the
+# property-based testing library.
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-ra"
+
+# Hypothesis profile wiring (the single property-test toolchain).
+[tool.hypothesis]
+# Profiles are registered in tests/conftest.py; this section documents intent.

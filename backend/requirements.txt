@@ -1,0 +1,17 @@
+# Runtime dependencies
+fastapi>=0.110
+uvicorn[standard]>=0.27
+pydantic>=2.6
+SQLAlchemy>=2.0
+alembic>=1.13
+psycopg[binary]>=3.1
+GeoAlchemy2>=0.14
+python-dotenv>=1.0
+scikit-learn>=1.4
+numpy>=1.26
+twilio>=9.0
+python-multipart>=0.0.9
+
+# Test toolchain (single property-test stack: pytest + hypothesis)
+pytest>=8.0
+hypothesis>=6.98

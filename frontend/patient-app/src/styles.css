@@ -1,0 +1,215 @@
+/* Calm, anxiety-reducing styling for the patient/parent home screen (Task 14.1).
+   Goals: soft colors, generous whitespace, large readable status, gentle
+   contrast — no alarm, no urgency, no request buttons. Dependency-light. */
+
+:root {
+  --bg: #eef3f8;
+  --card: #ffffff;
+  --ink: #233040;
+  --ink-soft: #5a6a7b;
+  --line: #e6ecf3;
+
+  /* Calm status palette: a soft green for "arranged", a calm (not alarming)
+     amber/blue for "arranging". Neither shouts. */
+  --arranged-bg: #eaf6ef;
+  --arranged-ink: #1f6b46;
+  --arranged-dot: #2e9c66;
+
+  --arranging-bg: #eef2fb;
+  --arranging-ink: #3a4a86;
+  --arranging-dot: #6a82d8;
+
+  --brand: #b22234;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans",
+    Arial, sans-serif;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.card {
+  width: 100%;
+  max-width: 520px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 32px 28px 28px;
+  box-shadow: 0 10px 32px rgba(35, 48, 64, 0.07);
+}
+
+.brand {
+  margin: 0 0 4px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--brand);
+  font-size: 0.95rem;
+}
+
+.greeting {
+  margin: 0 0 24px;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* The reassurance panel is the visual heart of the screen: large, soft, calm. */
+.status-panel {
+  border-radius: 16px;
+  padding: 24px 22px;
+  margin: 0 0 24px;
+}
+
+.status-panel.is-arranged {
+  background: var(--arranged-bg);
+}
+
+.status-panel.is-arranging {
+  background: var(--arranging-bg);
+}
+
+.status-eyebrow {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.status-headline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 12px;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.is-arranged .status-headline {
+  color: var(--arranged-ink);
+}
+
+.is-arranging .status-headline {
+  color: var(--arranging-ink);
+}
+
+.status-dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+
+.is-arranged .status-dot {
+  background: var(--arranged-dot);
+}
+
+.is-arranging .status-dot {
+  background: var(--arranging-dot);
+}
+
+.reassurance {
+  margin: 0;
+  font-size: 1.08rem;
+  color: var(--ink-soft);
+}
+
+.details {
+  margin: 0 0 24px;
+  padding: 0;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.detail-row dt {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.98rem;
+}
+
+.detail-row dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+  font-size: 1.05rem;
+}
+
+.footer-note {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+/* The screen has no request buttons; .btn is used only for the gentle retry on
+   a load error, kept calm and unobtrusive. */
+.btn {
+  appearance: none;
+  min-height: 48px;
+  padding: 12px 22px;
+  border-radius: 12px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #ffffff;
+  color: var(--ink);
+  border: 1px solid #cbd5e1;
+  transition: transform 0.04s ease, box-shadow 0.15s ease;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.status-title {
+  margin: 8px 0 12px;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.status-body {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 1.05rem;
+}
