@@ -25,7 +25,7 @@ Built for the **AI for Good Hackathon**.
 | Language | Python 3.11 |
 | API framework | FastAPI + Uvicorn |
 | Data validation | Pydantic v2 |
-| LLM parsing | Rule-based MockLlmClient (regex + date normalisation) |
+| LLM parsing | Rule-based MockLlmClient |
 | Voice IVR | Twilio Programmable Voice (TwiML, DTMF) |
 | WhatsApp | Twilio WhatsApp Business API |
 | Forecasting | EWMA cadence estimation (custom, no external ML lib) |
