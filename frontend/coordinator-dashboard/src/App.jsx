@@ -51,12 +51,14 @@ export default function App() {
             className={`nav-btn ${view === "patients" ? "nav-active" : ""}`}
             onClick={() => setView("patients")}
           >
+            <svg className="nav-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M16 19c0-2.2-1.8-4-4-4s-4 1.8-4 4M12 11a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
             Patients
           </button>
           <button
             className={`nav-btn ${view === "callflow" ? "nav-active" : ""}`}
             onClick={() => setView("callflow")}
           >
+            <svg className="nav-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6.5 4h3l1.5 4-2 1.5a11 11 0 005 5l1.5-2 4 1.5v3a2 2 0 01-2.2 2A16 16 0 014.5 6.2 2 2 0 016.5 4z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/></svg>
             Call Flow
             {callLogCount > 0 && (
               <span className="nav-badge">{callLogCount}</span>
@@ -66,6 +68,7 @@ export default function App() {
             className={`nav-btn ${view === "notifications" ? "nav-active" : ""}`}
             onClick={() => setView("notifications")}
           >
+            <svg className="nav-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 016.5 4h11A2.5 2.5 0 0120 6.5v7A2.5 2.5 0 0117.5 16H9l-4 3.5V6.5z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/></svg>
             WhatsApp Log
           </button>
         </nav>
@@ -288,6 +291,24 @@ function PatientsPage({ navigate }) {
     });
   }, [ranked, searchQuery, filterRisk, filterBlood, filterMonth, filterCoverage]);
 
+  // Headline metrics for the KPI band (derived from the ranked set).
+  const stats = useMemo(() => {
+    let high = 0;
+    let covered = 0;
+    let arranging = 0;
+    ranked.forEach(({ slot, riskScore }) => {
+      if (riskBand(riskScore).label === "High") high += 1;
+      const confirmed = confirmedCount(slot);
+      const needed = (slot && slot.unitsNeeded) || 1;
+      if (confirmed >= needed) covered += 1;
+      else arranging += 1;
+    });
+    const coverageRate = ranked.length
+      ? Math.round((covered / ranked.length) * 100)
+      : 0;
+    return { total: ranked.length, high, covered, arranging, coverageRate };
+  }, [ranked]);
+
   const hasActiveFilter =
     searchQuery.trim() !== "" ||
     filterRisk !== "all" ||
@@ -343,11 +364,68 @@ function PatientsPage({ navigate }) {
   return (
     <div className="page-content">
       <div className="page-header">
-        <div>
-          <h2 className="page-title">PulseLink Coordinator Dashboard</h2>
-          <p className="muted">Risk-ranked. Click Start Call for IVR flow · View to see assigned donors.</p>
+        <div className="page-header-main">
+          <span className="page-header-glyph" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M3 12h3.5l1.8-5 3 11 2.4-7 1.5 3H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </span>
+          <div>
+            <h2 className="page-title">PulseLink Coordinator Dashboard</h2>
+            <p className="muted">Risk-ranked transfusion planning · Start an IVR call or view matched donors for any patient.</p>
+          </div>
         </div>
+        <span className="live-pill" title="Auto-refreshing">
+          <span className="live-dot" aria-hidden="true" />
+          Live · {cityId}
+        </span>
       </div>
+
+      {/* KPI summary band */}
+      {!loading && ranked.length > 0 && (
+        <div className="kpi-band">
+          <div className="kpi-card kpi-total">
+            <span className="kpi-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M16 19c0-2.2-1.8-4-4-4s-4 1.8-4 4M12 11a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </span>
+            <div className="kpi-text">
+              <span className="kpi-value">{stats.total}</span>
+              <span className="kpi-label">Active patients</span>
+            </div>
+          </div>
+          <div className="kpi-card kpi-risk">
+            <span className="kpi-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M12 4l8.5 14.5H3.5L12 4z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/><path d="M12 10v4M12 16.5v.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+            </span>
+            <div className="kpi-text">
+              <span className="kpi-value">{stats.high}</span>
+              <span className="kpi-label">High risk now</span>
+            </div>
+          </div>
+          <div className="kpi-card kpi-covered">
+            <span className="kpi-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6l7-3z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/><path d="M9 11.5l2 2 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </span>
+            <div className="kpi-text">
+              <span className="kpi-value">{stats.covered}</span>
+              <span className="kpi-label">Fully arranged</span>
+            </div>
+          </div>
+          <div className="kpi-card kpi-arranging">
+            <span className="kpi-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" strokeWidth="1.8"/><path d="M12 7.5V12l3 2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </span>
+            <div className="kpi-text">
+              <span className="kpi-value">{stats.arranging}</span>
+              <span className="kpi-label">Still arranging</span>
+            </div>
+            <div className="kpi-meter" aria-hidden="true">
+              <span className="kpi-meter-fill" style={{ width: `${stats.coverageRate}%` }} />
+            </div>
+            <span className="kpi-meter-label">{stats.coverageRate}% coverage</span>
+          </div>
+        </div>
+      )}
 
       {/* Search + filter bar */}
       <div className="search-filter-bar">

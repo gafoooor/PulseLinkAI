@@ -1,25 +1,35 @@
-/* Calm, anxiety-reducing styling for the patient/parent home screen (Task 14.1).
-   Goals: soft colors, generous whitespace, large readable status, gentle
-   contrast — no alarm, no urgency, no request buttons. Dependency-light. */
+/* =========================================================
+   PulseLink Patient App — calm, reassuring design
+   Soft surfaces, generous whitespace, a large readable
+   status, gentle contrast. No alarm, no urgency.
+   ========================================================= */
 
 :root {
-  --bg: #eef3f8;
+  --bg: #eef2f8;
   --card: #ffffff;
-  --ink: #233040;
+  --ink: #1b2738;
   --ink-soft: #5a6a7b;
-  --line: #e6ecf3;
+  --ink-faint: #93a1b1;
+  --line: #e8eef5;
+  --line-soft: #f1f5fa;
 
-  /* Calm status palette: a soft green for "arranged", a calm (not alarming)
-     amber/blue for "arranging". Neither shouts. */
-  --arranged-bg: #eaf6ef;
-  --arranged-ink: #1f6b46;
+  /* Calm status palette */
+  --arranged-bg: #e9f7ef;
+  --arranged-ink: #14704a;
   --arranged-dot: #2e9c66;
 
-  --arranging-bg: #eef2fb;
-  --arranging-ink: #3a4a86;
+  --arranging-bg: #eef2fc;
+  --arranging-ink: #364a86;
   --arranging-dot: #6a82d8;
 
-  --brand: #b22234;
+  --brand: #e11d48;
+
+  --shadow-card: 0 18px 48px rgba(27, 39, 56, 0.10), 0 4px 12px rgba(27, 39, 56, 0.05);
+  --r-lg: 22px;
+  --r-md: 16px;
+
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Arial, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
 }
 
 * {
@@ -33,12 +43,16 @@ body {
 }
 
 body {
-  background: var(--bg);
   color: var(--ink);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans",
-    Arial, sans-serif;
+  font-family: var(--font-sans);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(1000px 540px at 50% -12%, rgba(106, 130, 216, 0.14), transparent 60%),
+    radial-gradient(820px 460px at 88% 8%, rgba(46, 156, 102, 0.10), transparent 58%);
+  background-attachment: fixed;
 }
 
 .screen {
@@ -46,65 +60,99 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 16px;
+  padding: 28px 16px;
 }
 
 .card {
   width: 100%;
-  max-width: 520px;
+  max-width: 540px;
   background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  padding: 32px 28px 28px;
-  box-shadow: 0 10px 32px rgba(35, 48, 64, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: var(--r-lg);
+  padding: 36px 30px 30px;
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+}
+
+/* A soft gradient ribbon across the top of the card */
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--brand), #fb7185, var(--arranging-dot));
 }
 
 .brand {
-  margin: 0 0 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--brand);
-  font-size: 0.95rem;
+  font-size: 0.82rem;
+}
+
+.brand::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--brand);
+  box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.14);
 }
 
 .greeting {
   margin: 0 0 24px;
-  font-size: 1.35rem;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--ink);
 }
 
-/* The reassurance panel is the visual heart of the screen: large, soft, calm. */
+/* The reassurance panel is the visual heart of the screen. */
 .status-panel {
-  border-radius: 16px;
-  padding: 24px 22px;
+  border-radius: var(--r-md);
+  padding: 26px 24px;
   margin: 0 0 24px;
+  border: 1px solid transparent;
 }
 
 .status-panel.is-arranged {
-  background: var(--arranged-bg);
+  background: linear-gradient(180deg, #effaf3, var(--arranged-bg));
+  border-color: #c4ead4;
 }
 
 .status-panel.is-arranging {
-  background: var(--arranging-bg);
+  background: linear-gradient(180deg, #f3f6fd, var(--arranging-bg));
+  border-color: #d4ddf6;
 }
 
 .status-eyebrow {
   margin: 0 0 8px;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   color: var(--ink-soft);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
+  font-weight: 600;
 }
 
 .status-headline {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 13px;
   margin: 0 0 12px;
-  font-size: 2rem;
-  font-weight: 700;
-  line-height: 1.2;
+  font-family: var(--font-display);
+  font-size: 2.1rem;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
 }
 
 .is-arranged .status-headline {
@@ -117,18 +165,27 @@ body {
 
 .status-dot {
   display: inline-block;
-  width: 14px;
-  height: 14px;
+  width: 15px;
+  height: 15px;
   border-radius: 50%;
   flex: 0 0 auto;
+  position: relative;
 }
 
 .is-arranged .status-dot {
   background: var(--arranged-dot);
+  box-shadow: 0 0 0 5px rgba(46, 156, 102, 0.16);
 }
 
 .is-arranging .status-dot {
   background: var(--arranging-dot);
+  box-shadow: 0 0 0 5px rgba(106, 130, 216, 0.16);
+  animation: gentle-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes gentle-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(106, 130, 216, 0.16); }
+  50% { box-shadow: 0 0 0 8px rgba(106, 130, 216, 0.05); }
 }
 
 .reassurance {
@@ -147,9 +204,12 @@ body {
   justify-content: space-between;
   align-items: baseline;
   gap: 16px;
-  padding: 14px 0;
-  border-top: 1px solid var(--line);
+  padding: 15px 2px;
   border-bottom: 1px solid var(--line);
+}
+
+.detail-row:first-child {
+  border-top: 1px solid var(--line);
 }
 
 .detail-row dt {
@@ -160,31 +220,39 @@ body {
 
 .detail-row dd {
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
   text-align: right;
   font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .footer-note {
   margin: 0;
-  color: var(--ink-soft);
+  color: var(--ink-faint);
   font-size: 0.95rem;
 }
 
-/* The screen has no request buttons; .btn is used only for the gentle retry on
-   a load error, kept calm and unobtrusive. */
+/* .btn is used only for the gentle retry on a load error. */
 .btn {
   appearance: none;
   min-height: 48px;
-  padding: 12px 22px;
-  border-radius: 12px;
+  padding: 12px 24px;
+  border-radius: 14px;
+  font-family: inherit;
   font-size: 1.05rem;
   font-weight: 600;
   cursor: pointer;
-  background: #ffffff;
-  color: var(--ink);
-  border: 1px solid #cbd5e1;
-  transition: transform 0.04s ease, box-shadow 0.15s ease;
+  background: linear-gradient(180deg, #4f46e5, #4338ca);
+  color: #fff;
+  border: 1px solid transparent;
+  box-shadow: 0 8px 20px rgba(79, 70, 229, 0.24);
+  transition: transform 0.06s ease, box-shadow 0.16s ease, filter 0.15s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+  box-shadow: 0 12px 26px rgba(79, 70, 229, 0.3);
 }
 
 .btn:active {
@@ -192,7 +260,7 @@ body {
 }
 
 .btn:focus-visible {
-  outline: 3px solid #2563eb;
+  outline: 3px solid rgba(79, 70, 229, 0.3);
   outline-offset: 2px;
 }
 
@@ -204,8 +272,10 @@ body {
 
 .status-title {
   margin: 8px 0 12px;
-  font-size: 1.4rem;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .status-body {

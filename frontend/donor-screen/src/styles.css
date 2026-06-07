@@ -1,18 +1,32 @@
-/* Calm, simple, dependency-light styling for the donor screen (Task 14.3).
-   Goals: readable contrast, large tap targets, no medical alarm. */
+/* =========================================================
+   PulseLink Donor Screen — clean, install-free, decisive
+   Large tap targets, readable contrast, warm and calm.
+   ========================================================= */
 
 :root {
-  --bg: #f4f7fb;
+  --bg: #eef2f8;
   --card: #ffffff;
-  --ink: #1f2933;
-  --ink-soft: #52606d;
-  --line: #e4e9f0;
-  --accept: #1f7a4d;
+  --ink: #16202e;
+  --ink-soft: #56657a;
+  --ink-faint: #93a1b1;
+  --line: #e8eef5;
+  --line-soft: #f1f5fa;
+
+  --accept: #16a34a;
+  --accept-strong: #15803d;
   --accept-ink: #ffffff;
   --decline: #ffffff;
-  --decline-ink: #3e4c59;
-  --decline-line: #cbd2d9;
-  --brand: #b22234;
+  --decline-ink: #475569;
+  --decline-line: #d4dce6;
+
+  --brand: #e11d48;
+
+  --shadow-card: 0 18px 48px rgba(22, 32, 46, 0.10), 0 4px 12px rgba(22, 32, 46, 0.05);
+  --r-lg: 20px;
+  --r-md: 14px;
+
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans", Arial, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
 }
 
 * {
@@ -26,12 +40,16 @@ body {
 }
 
 body {
-  background: var(--bg);
   color: var(--ink);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans",
-    Arial, sans-serif;
+  font-family: var(--font-sans);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(900px 480px at 50% -12%, rgba(225, 29, 72, 0.10), transparent 60%),
+    radial-gradient(760px 420px at 90% 6%, rgba(22, 163, 74, 0.09), transparent 58%);
+  background-attachment: fixed;
 }
 
 .screen {
@@ -39,38 +57,66 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px 16px;
+  padding: 28px 16px;
 }
 
 .card {
   width: 100%;
   max-width: 480px;
   background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 28px 24px 32px;
-  box-shadow: 0 6px 24px rgba(31, 41, 51, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: var(--r-lg);
+  padding: 30px 26px 34px;
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--brand), #fb7185, #f59e0b);
 }
 
 .brand {
-  margin: 0 0 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 18px;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--brand);
-  font-size: 0.95rem;
-  text-transform: none;
+  font-size: 0.82rem;
+}
+
+.brand::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--brand);
+  box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.14);
 }
 
 .heading {
-  margin: 0 0 20px;
-  font-size: 1.5rem;
-  font-weight: 600;
+  margin: 0 0 22px;
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
   color: var(--ink);
 }
 
 .details {
-  margin: 0 0 20px;
-  padding: 0;
+  margin: 0 0 22px;
+  padding: 18px 18px 6px;
+  background: var(--line-soft);
+  border-radius: var(--r-md);
 }
 
 .detail-row {
@@ -82,8 +128,8 @@ body {
   border-top: 1px solid var(--line);
 }
 
-.detail-row:last-child {
-  border-bottom: 1px solid var(--line);
+.detail-row:first-child {
+  border-top: none;
 }
 
 .detail-row dt {
@@ -94,12 +140,13 @@ body {
 
 .detail-row dd {
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .empathetic {
-  margin: 0 0 28px;
+  margin: 0 0 26px;
   color: var(--ink-soft);
   font-size: 1.02rem;
 }
@@ -115,11 +162,13 @@ body {
   width: 100%;
   min-height: 56px;
   padding: 14px 20px;
-  border-radius: 12px;
+  border-radius: var(--r-md);
+  font-family: inherit;
   font-size: 1.15rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: transform 0.04s ease, box-shadow 0.15s ease, background 0.15s ease;
+  transition: transform 0.06s ease, box-shadow 0.16s ease, background 0.15s ease,
+    filter 0.15s ease;
 }
 
 .btn:active {
@@ -129,17 +178,25 @@ body {
 .btn:disabled {
   opacity: 0.6;
   cursor: default;
+  box-shadow: none;
 }
 
 .btn:focus-visible {
-  outline: 3px solid #2563eb;
+  outline: 3px solid rgba(79, 70, 229, 0.32);
   outline-offset: 2px;
 }
 
 .btn-accept {
-  background: var(--accept);
+  background: linear-gradient(180deg, #22c55e, var(--accept));
   color: var(--accept-ink);
-  border: 1px solid var(--accept);
+  border: 1px solid transparent;
+  box-shadow: 0 10px 22px rgba(22, 163, 74, 0.26);
+}
+
+.btn-accept:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+  box-shadow: 0 14px 28px rgba(22, 163, 74, 0.32);
 }
 
 .btn-decline {
@@ -148,15 +205,22 @@ body {
   border: 1px solid var(--decline-line);
 }
 
+.btn-decline:hover:not(:disabled) {
+  background: var(--line-soft);
+  border-color: #c2ccd9;
+}
+
 .status {
   text-align: center;
-  padding: 12px 0 4px;
+  padding: 14px 0 4px;
 }
 
 .status-title {
   margin: 0 0 12px;
-  font-size: 1.5rem;
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .status-body {

@@ -147,7 +147,11 @@ export default function CallFlowPage({ sessionId, patientId, callMode, twilioErr
               </div>
               <div className="call-info-item">
                 <dt>Slot</dt>
-                <dd>{session.slotId || "—"}</dd>
+                <dd title={session.slotId}>
+                  {session.slotId
+                    ? `${session.slotId.slice(0, 16)}${session.slotId.length > 16 ? "…" : ""}`
+                    : "—"}
+                </dd>
               </div>
               <div className="call-info-item">
                 <dt>Donor queue</dt>
