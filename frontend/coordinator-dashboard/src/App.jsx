@@ -10,11 +10,10 @@
 // CallFlow with live polling → result shown → back to Patients or Notifications.
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { fetchPatients, parseRecord, startCallFlow, getCallLog, getParseInbox, getPatientDonors, REVIEW_THRESHOLD } from "./api.js";
+import { fetchPatients, startCallFlow, getCallLog, getPatientDonors } from "./api.js";
 import { rankByRisk } from "./risk.js";
 import CallFlowPage from "./CallFlowPage.jsx";
 import NotificationsPage from "./NotificationsPage.jsx";
-import ParseInboxPage from "./ParseInboxPage.jsx";
 import "./styles.css";
 
 // ---------------------------------------------------------------------------
@@ -23,16 +22,11 @@ import "./styles.css";
 export default function App() {
   const [view, setView] = useState("patients");
   const [callSession, setCallSession] = useState(null); // { sessionId, patientId }
-  const [inboxCount, setInboxCount] = useState(0);
   const [callLogCount, setCallLogCount] = useState(0);
 
   // Poll badge counts
   useEffect(() => {
     async function pollBadges() {
-      try {
-        const inbox = await getParseInbox();
-        setInboxCount((inbox.messages || []).filter((m) => m.status === "pending").length);
-      } catch { /* ignore */ }
       try {
         const log = await getCallLog();
         setCallLogCount(log.total || 0);
@@ -74,15 +68,6 @@ export default function App() {
           >
             WhatsApp Log
           </button>
-          <button
-            className={`nav-btn ${view === "parse-inbox" ? "nav-active" : ""}`}
-            onClick={() => setView("parse-inbox")}
-          >
-            Inbox
-            {inboxCount > 0 && (
-              <span className="nav-badge nav-badge-alert">{inboxCount}</span>
-            )}
-          </button>
         </nav>
       </header>
 
@@ -98,7 +83,6 @@ export default function App() {
           />
         )}
         {view === "notifications" && <NotificationsPage />}
-        {view === "parse-inbox" && <ParseInboxPage />}
       </main>
     </div>
   );
@@ -133,6 +117,12 @@ function formatWindow(slot) {
 
 function confirmedCount(slot) {
   return ((slot && slot.assignments) || []).filter((x) => x?.status === "confirmed").length;
+}
+
+function formatMonthLabel(ym) {
+  const [year, month] = ym.split("-");
+  const names = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return `${names[parseInt(month, 10) - 1]} ${year}`;
 }
 
 const PATIENT_APP_BASE =
@@ -233,8 +223,15 @@ function PatientsPage({ navigate }) {
   const [loading, setLoading] = useState(true);
   const [starting, setStarting] = useState({});
   const [expandedId, setExpandedId] = useState(null);
-  const [donorData, setDonorData] = useState({});     // patientId → donor response
-  const [donorLoading, setDonorLoading] = useState({}); // patientId → bool
+  const [donorData, setDonorData] = useState({});
+  const [donorLoading, setDonorLoading] = useState({});
+
+  // Search + filter state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterRisk, setFilterRisk] = useState("all");
+  const [filterBlood, setFilterBlood] = useState("all");
+  const [filterMonth, setFilterMonth] = useState("all");
+  const [filterCoverage, setFilterCoverage] = useState("all");
 
   useEffect(() => {
     setLoading(true);
@@ -248,6 +245,63 @@ function PatientsPage({ navigate }) {
     const entries = patients.map((p) => ({ patient: p, slot: p.slot }));
     return rankByRisk(entries, today);
   }, [patients, today]);
+
+  // Unique blood groups from loaded patients
+  const bloodGroups = useMemo(() => {
+    const groups = new Set(patients.map((p) => p.bloodGroup).filter(Boolean));
+    return [...groups].sort();
+  }, [patients]);
+
+  // Unique months (YYYY-MM) from next window start dates
+  const windowMonths = useMemo(() => {
+    const months = new Set();
+    patients.forEach((p) => {
+      const start = p.slot?.window?.start;
+      if (start) months.add(start.slice(0, 7));
+    });
+    return [...months].sort();
+  }, [patients]);
+
+  // Apply search + all filters to the risk-ranked list
+  const displayed = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return ranked.filter(({ patient, slot, riskScore }) => {
+      if (q) {
+        const pid = (patient.patientId || "").toLowerCase();
+        const blood = (patient.bloodGroup || "").toLowerCase();
+        if (!pid.includes(q) && !blood.includes(q)) return false;
+      }
+      if (filterRisk !== "all" && riskBand(riskScore).label.toLowerCase() !== filterRisk) return false;
+      if (filterBlood !== "all" && patient.bloodGroup !== filterBlood) return false;
+      if (filterMonth !== "all") {
+        const start = slot?.window?.start;
+        if (!start || start.slice(0, 7) !== filterMonth) return false;
+      }
+      if (filterCoverage !== "all") {
+        const confirmed = confirmedCount(slot);
+        const needed = (slot && slot.unitsNeeded) || 1;
+        if (filterCoverage === "full" && confirmed < needed) return false;
+        if (filterCoverage === "partial" && (confirmed === 0 || confirmed >= needed)) return false;
+        if (filterCoverage === "none" && confirmed > 0) return false;
+      }
+      return true;
+    });
+  }, [ranked, searchQuery, filterRisk, filterBlood, filterMonth, filterCoverage]);
+
+  const hasActiveFilter =
+    searchQuery.trim() !== "" ||
+    filterRisk !== "all" ||
+    filterBlood !== "all" ||
+    filterMonth !== "all" ||
+    filterCoverage !== "all";
+
+  function clearFilters() {
+    setSearchQuery("");
+    setFilterRisk("all");
+    setFilterBlood("all");
+    setFilterMonth("all");
+    setFilterCoverage("all");
+  }
 
   async function handleStartCall(patient, slot) {
     const pid = patient.patientId;
@@ -290,8 +344,63 @@ function PatientsPage({ navigate }) {
     <div className="page-content">
       <div className="page-header">
         <div>
-          <h2 className="page-title">Patients — {cityId}</h2>
+          <h2 className="page-title">PulseLink Coordinator Dashboard</h2>
           <p className="muted">Risk-ranked. Click Start Call for IVR flow · View to see assigned donors.</p>
+        </div>
+      </div>
+
+      {/* Search + filter bar */}
+      <div className="search-filter-bar">
+        <div className="search-wrap">
+          <svg className="search-icon" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" strokeWidth="1.6" />
+            <path d="M13 13l3.5 3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
+          <input
+            className="search-input"
+            type="search"
+            placeholder="Search by patient ID or blood group…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <div className="filter-controls">
+          <label className="filter-label">
+            <span className="filter-label-text">Risk</span>
+            <select className="filter-select" value={filterRisk} onChange={(e) => setFilterRisk(e.target.value)}>
+              <option value="all">All</option>
+              <option value="high">High</option>
+              <option value="medium">Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </label>
+          <label className="filter-label">
+            <span className="filter-label-text">Blood group</span>
+            <select className="filter-select" value={filterBlood} onChange={(e) => setFilterBlood(e.target.value)}>
+              <option value="all">All</option>
+              {bloodGroups.map((g) => (
+                <option key={g} value={g}>{g}</option>
+              ))}
+            </select>
+          </label>
+          <label className="filter-label">
+            <span className="filter-label-text">Next window</span>
+            <select className="filter-select" value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)}>
+              <option value="all">All months</option>
+              {windowMonths.map((m) => (
+                <option key={m} value={m}>{formatMonthLabel(m)}</option>
+              ))}
+            </select>
+          </label>
+          <label className="filter-label">
+            <span className="filter-label-text">Coverage</span>
+            <select className="filter-select" value={filterCoverage} onChange={(e) => setFilterCoverage(e.target.value)}>
+              <option value="all">All</option>
+              <option value="full">Full</option>
+              <option value="partial">Partial</option>
+              <option value="none">None</option>
+            </select>
+          </label>
         </div>
       </div>
 
@@ -301,6 +410,16 @@ function PatientsPage({ navigate }) {
         <p className="muted">No patients found for this city.</p>
       ) : (
         <div className="panel">
+          <div className="filter-count-row">
+            <span className="filter-count">
+              Showing <strong>{displayed.length}</strong> of <strong>{ranked.length}</strong> patients
+            </span>
+            {hasActiveFilter && (
+              <button className="clear-filters-btn" onClick={clearFilters}>
+                Clear filters
+              </button>
+            )}
+          </div>
           <table className="risk-table">
             <thead>
               <tr>
@@ -313,166 +432,76 @@ function PatientsPage({ navigate }) {
               </tr>
             </thead>
             <tbody>
-              {ranked.map(({ patient, slot, riskScore }) => {
-                const band = riskBand(riskScore);
-                const confirmed = confirmedCount(slot);
-                const needed = (slot && slot.unitsNeeded) || 1;
-                const pid = patient.patientId;
-                const isOpen = expandedId === pid;
-                return (
-                  <>
-                    <tr key={pid} className={isOpen ? "patient-row-open" : ""}>
-                      <td>
-                        <span className={`risk-pill ${band.cls}`}>
-                          <span className="risk-score">{riskScore.toFixed(1)}</span>
-                          <span className="risk-label">{band.label}</span>
-                        </span>
-                      </td>
-                      <th scope="row" className="patient-id" title={pid}>
-                        {shortId(pid)}
-                      </th>
-                      <td>{patient.bloodGroup || "—"}</td>
-                      <td className="nowrap">{formatWindow(slot)}</td>
-                      <td>
-                        <span className={confirmed >= needed ? "coverage-ok" : "coverage-short"}>
-                          {confirmed}/{needed}
-                        </span>
-                      </td>
-                      <td className="action-cell">
-                        <button
-                          className="btn btn-call"
-                          onClick={() => handleStartCall(patient, slot)}
-                          disabled={starting[pid]}
-                          title="Start automated IVR donor call flow"
-                        >
-                          {starting[pid] ? "Starting…" : "Start Call"}
-                        </button>
-                        <button
-                          className={`btn btn-view ${isOpen ? "btn-view-open" : ""}`}
-                          onClick={() => handleToggleView(pid)}
-                          title="View assigned donors"
-                        >
-                          {isOpen ? "Close" : "View"}
-                        </button>
-                      </td>
-                    </tr>
-                    {isOpen && (
-                      <tr key={`${pid}-donors`} className="donor-expand-row">
-                        <td colSpan={6} className="donor-expand-cell">
-                          <DonorPanel
-                            patientId={pid}
-                            data={donorData[pid]}
-                            loading={donorLoading[pid] || false}
-                          />
+              {displayed.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="no-results">
+                    No patients match the current filters.
+                  </td>
+                </tr>
+              ) : (
+                displayed.map(({ patient, slot, riskScore }) => {
+                  const band = riskBand(riskScore);
+                  const confirmed = confirmedCount(slot);
+                  const needed = (slot && slot.unitsNeeded) || 1;
+                  const pid = patient.patientId;
+                  const isOpen = expandedId === pid;
+                  return (
+                    <>
+                      <tr key={pid} className={isOpen ? "patient-row-open" : ""}>
+                        <td>
+                          <span className={`risk-pill ${band.cls}`}>
+                            <span className="risk-score">{riskScore.toFixed(1)}</span>
+                            <span className="risk-label">{band.label}</span>
+                          </span>
+                        </td>
+                        <th scope="row" className="patient-id" title={pid}>
+                          {shortId(pid)}
+                        </th>
+                        <td>{patient.bloodGroup || "—"}</td>
+                        <td className="nowrap">{formatWindow(slot)}</td>
+                        <td>
+                          <span className={confirmed >= needed ? "coverage-ok" : "coverage-short"}>
+                            {confirmed}/{needed}
+                          </span>
+                        </td>
+                        <td className="action-cell">
+                          <button
+                            className="btn btn-call"
+                            onClick={() => handleStartCall(patient, slot)}
+                            disabled={starting[pid]}
+                            title="Start automated IVR donor call flow"
+                          >
+                            {starting[pid] ? "Starting…" : "Start Call"}
+                          </button>
+                          <button
+                            className={`btn btn-view ${isOpen ? "btn-view-open" : ""}`}
+                            onClick={() => handleToggleView(pid)}
+                            title="View assigned donors"
+                          >
+                            {isOpen ? "Close" : "View"}
+                          </button>
                         </td>
                       </tr>
-                    )}
-                  </>
-                );
-              })}
+                      {isOpen && (
+                        <tr key={`${pid}-donors`} className="donor-expand-row">
+                          <td colSpan={6} className="donor-expand-cell">
+                            <DonorPanel
+                              patientId={pid}
+                              data={donorData[pid]}
+                              loading={donorLoading[pid] || false}
+                            />
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
       )}
 
-      <PasteToParse cityId={cityId} />
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// PasteToParse
-// ---------------------------------------------------------------------------
-const PARSE_PHASE = { IDLE: "idle", SUBMITTING: "submitting", DONE: "done", ERROR: "error" };
-
-function isLowConfidence(field) {
-  if (field.flagged) return true;
-  const c = Number(field.confidence);
-  return !Number.isFinite(c) || c < REVIEW_THRESHOLD;
-}
-
-function PasteToParse({ cityId }) {
-  const [text, setText] = useState("");
-  const [phase, setPhase] = useState(PARSE_PHASE.IDLE);
-  const [result, setResult] = useState(null);
-
-  async function onSubmit(e) {
-    e.preventDefault();
-    if (!text.trim()) return;
-    setPhase(PARSE_PHASE.SUBMITTING);
-    try {
-      const parsed = await parseRecord(text, cityId);
-      setResult(parsed);
-      setPhase(PARSE_PHASE.DONE);
-    } catch {
-      setResult(null);
-      setPhase(PARSE_PHASE.ERROR);
-    }
-  }
-
-  return (
-    <section className="panel" aria-labelledby="parse-heading">
-      <h2 id="parse-heading" className="panel-title">Paste a WhatsApp record to parse</h2>
-      <p className="muted">
-        Paste any messy text from a patient or family. The LLM Parser extracts
-        structured fields — low-confidence ones are highlighted for review.
-      </p>
-      <form onSubmit={onSubmit} className="parse-form">
-        <textarea
-          className="parse-input"
-          rows={4}
-          placeholder="e.g. Patient Ravi B+ve every 21 days Hyderabad, donor 9XXXX speaks Telugu…"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-        />
-        <button
-          type="submit"
-          className="btn btn-primary"
-          disabled={phase === PARSE_PHASE.SUBMITTING || !text.trim()}
-        >
-          {phase === PARSE_PHASE.SUBMITTING ? "Parsing…" : "Parse for review"}
-        </button>
-      </form>
-      {phase === PARSE_PHASE.ERROR && (
-        <p className="error">Could not parse. Please try again.</p>
-      )}
-      {phase === PARSE_PHASE.DONE && result && <ParsedReview result={result} />}
-    </section>
-  );
-}
-
-function ParsedReview({ result }) {
-  const fields = result.fields || [];
-  const flaggedCount = fields.filter(isLowConfidence).length;
-  return (
-    <div className="parsed">
-      <p className="parsed-meta">
-        Parsed by <code>{result.modelVersion || "parser"}</code>
-        {flaggedCount > 0 ? (
-          <span className="flag-summary">{flaggedCount} field(s) need review</span>
-        ) : (
-          <span className="flag-summary ok">All fields confident</span>
-        )}
-      </p>
-      <ul className="field-list">
-        {fields.map((field) => {
-          const low = isLowConfidence(field);
-          const pct = Math.round(Number(field.confidence) * 100) || 0;
-          const val = field.value === null || field.value === undefined ? "—" : String(field.value);
-          return (
-            <li key={field.path} className={low ? "field field-flagged" : "field"}>
-              <div className="field-main">
-                <span className="field-label">{field.label || field.path}</span>
-                <span className="field-value">{val}</span>
-              </div>
-              <div className="field-meta">
-                <span className="field-conf">{pct}%</span>
-                {low && <span className="review-tag">review{field.reason ? ` · ${field.reason}` : ""}</span>}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
     </div>
   );
 }

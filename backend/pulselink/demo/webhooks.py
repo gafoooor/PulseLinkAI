@@ -289,7 +289,7 @@ async def _voice_response_inner(session, lang, Digits, CallSid):
             if cfg:
                 try:
                     _notify_coordinator(
-                        f"PulseLink: Donor declined. Calling donor {next_idx + 1} of {len(sess.donor_queue)}...",
+                        f"PulseLink: We're arranging blood for the patient",
                         cfg,
                     )
                     _call_next_donor(session, state, cfg)
