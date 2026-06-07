@@ -29,7 +29,7 @@ Built for the **AI for Good Hackathon**.
 | Voice IVR | Twilio Programmable Voice (TwiML, DTMF) |
 | WhatsApp | Twilio WhatsApp Business API |
 | Forecasting | EWMA cadence estimation (custom, no external ML lib) |
-| Reliability scoring | Weighted multi-factor score (acceptance ratio, call efficiency, volume, recency) |
+| Reliability scoring | Gradient Boosting Regression (acceptance ratio, call efficiency, volume, recency) |
 
 ### Frontend
 | Layer | Technology |
